@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Profil</h1>
+    
+    <!-- Informations utilisateur -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Informations utilisateur</h4>
+        </div>
+        <div class="card-body">
+            <p>Email : {{ current_user.email }}</p>
+        </div>
+    </div>
+
+    <!-- Configuration de la clé API -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Configuration API Gemini</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('main.save_api_key') }}">
+                <div class="mb-3">
+                    <label for="api_key" class="form-label">Clé API Gemini</label>
+                    <input type="password" class="form-control" id="api_key" name="api_key" 
+                           value="{{ '********' if current_user.get_api_key() else '' }}"
+                           placeholder="Entrez votre clé API Gemini">
+                    <div class="form-text">
+                        Cette clé est nécessaire pour utiliser l'assistant IA. Elle sera stockée de manière sécurisée.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Sauvegarder la clé API</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gestion des fichiers -->
+    <div class="card">
+        <div class="card-header">
+            <h4>Mes documents</h4>
+        </div>
+        <div class="card-body">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="memoire-tab" data-bs-toggle="tab" data-bs-target="#memoire" type="button" role="tab">Mémoire</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="essai-tab" data-bs-toggle="tab" data-bs-target="#essai" type="button" role="tab">Essai</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="prompt-tab" data-bs-toggle="tab" data-bs-target="#prompt" type="button" role="tab">Prompt Système</button>
+                </li>
+            </ul>
+            <div class="tab-content mt-3" id="myTabContent">
+                <div class="tab-pane fade show active" id="memoire" role="tabpanel">
+                    <form class="file-form" data-file="memoire.md">
+                        <textarea class="form-control mb-3" rows="10">{{ files['memoire.md'] }}</textarea>
+                        <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="essai" role="tabpanel">
+                    <form class="file-form" data-file="essai.md">
+                        <textarea class="form-control mb-3" rows="10">{{ files['essai.md'] }}</textarea>
+                        <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="prompt" role="tabpanel">
+                    <form class="file-form" data-file="prompt_systeme.md">
+                        <textarea class="form-control mb-3" rows="10">{{ files['prompt_systeme.md'] }}</textarea>
+                        <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.file-form');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fileName = this.dataset.file;
+            const content = this.querySelector('textarea').value;
+            
+            fetch('{{ url_for("main.save_file") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    file_name: fileName,
+                    content: content
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Fichier sauvegardé avec succès !');
+                } else {
+                    alert('Erreur lors de la sauvegarde : ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Erreur lors de la sauvegarde : ' + error);
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

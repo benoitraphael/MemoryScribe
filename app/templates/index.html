@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="text-center mt-5">
+        <h1>Bienvenue sur MemoryScribe</h1>
+        <p class="lead">Votre assistant conversationnel avec mémoire et génération d'essai</p>
+        {% if not current_user.is_authenticated %}
+            <div class="mt-4">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary me-2">Connexion</a>
+                <a href="{{ url_for('auth.signup') }}" class="btn btn-outline-primary">Inscription</a>
+            </div>
+        {% else %}
+            <div class="mt-4">
+                <a href="{{ url_for('main.profile') }}" class="btn btn-primary">Accéder à mon profil</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

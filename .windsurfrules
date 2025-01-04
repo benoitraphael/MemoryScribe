@@ -1,0 +1,225 @@
+Voici les éléments essentiels à toujours garder en mémoire :
+
+1) Cahier des charges
+2) plan de développement
+3) Règles IMPORTANTES concernant l'API Gemini
+
+# Cahier des charges
+Je te rappelle le projet :
+<cahier des charges>
+.
+
+**Introduction**
+Nom de projet proposé : "MemoryScribe" - Assistant conversationnel avec mémoire et génération d'essai.
+
+**1. Fonctionnalités de base**
+
+A. Gestion des utilisateurs :
+- Création de compte (email/mot de passe) 
+- Configuration de la clé API Gemini 
+- Connexion/Déconnexion 
+- Modification des informations de compte 
+
+B. Interface de chat :
+- Conversation en temps réel avec Gemini
+- Affichage alterné des messages (user/assistant)
+- Bouton de copie sur chaque message avec formatage automatique :
+  ```markdown
+  # NOTE DE CONVERSATION DU [date] PAR [auteur]
+  [contenu]
+  ```
+
+C. Gestion des documents :
+- 3 documents par utilisateur en Markdown :
+  1. Mémoire (stockage des conversations importantes)
+  2. Essai (texte généré/édité)
+  3. Prompt système (personnalisation de l'assistant)
+- Éditeur Markdown avec :
+  - Sauvegarde automatique
+  - Formatage basique (gras, italique, titres)
+
+D. Navigation :
+- Système d'onglets :
+  1. Chat (par défaut)
+  2. Mémoire
+  3. Essai
+  4. Prompt système
+
+**2. Contraintes techniques**
+
+A. Structure des données :
+- Un dossier par utilisateur contenant :
+  - memoire.md
+  - essai.md
+  - prompt_systeme.md
+
+B. Format du contexte pour Gemini :
+```markdown
+<prompt_systeme>
+[contenu integral du doc prompt_systeme.md]
+</prompt_systeme>
+
+Voici les notes prises lors de vos derniers echanges avec l'utilisateur : 
+<memoire>
+[contenu integral du doc memoire.md]
+</memoire>
+
+Voici l'etat actuel du livre en cours de redaction sur la base de vos notes :
+<essai>
+[contenu integral du doc essai.md]
+</essai>
+```
+
+**3. Sécurité**
+- Authentification requise
+- Encryption des clés API
+- Isolation des données entre utilisateurs
+- Protection contre les injections
+
+**4. Non inclus dans le MVP**
+- Partage de documents
+- Export des conversations
+- Historique des modifications
+- Mode multi-documents
+
+</cahier des charges>
+
+
+# Plan de développement
+Voici les étapes du plan de développement :
+<etapes>
+Plan de développement MVP proposé :
+
+## Phase 1 - Authentification (où nous allons commencer) - OK
+- Création de la structure du projet Flask - OK
+- Base de données simple pour les utilisateurs (email/mot de passe) - OK 
+- Page de connexion et d'inscription - OK
+- Page de profil basique - OK
+
+## Phase 2 - Gestion des documents - OK
+- Création des fichiers Markdown par utilisateur - OK
+- Système de sauvegarde simple - OK
+- Interface basique pour voir/éditer les documents - OK
+
+## Phase 3 - Interface de chat - OK
+- Interface de conversation simple - OK
+- Ajout d'une animation en attendant la reponse de Gemini - OK
+- Intégration de l'API Gemini - OK 
+- Système de contexte avec les documents - OK
+
+## Phase 4 - Fonctionnalités avancées - EN COURS
+- Formatage Markdown - OK
+- Copie des messages - OK
+- Sauvegarde automatique - A VERFIER
+
+</etapes>
+
+# Règles IMPORTANTES concernant l'API Gemini
+
+IL est TRÈS important que tu utilises bien le dernier modèle stable de Gemini mis à jour (tes donnees internes ne sont pas a jour à cause de ton knowledge cutoff)
+
+<doc>
+# Guide d'utilisation de Gemini 1.5 Pro
+
+## Présentation du modèle
+Gemini 1.5 Pro est un modèle multimodal de taille moyenne optimisé pour un large éventail de tâches de raisonnement. Il peut traiter :
+- 2 heures de vidéo
+- 19 heures d'audio 
+- Des codebases de 60 000 lignes
+- 2 000 pages de texte
+
+## Spécifications techniques détaillées
+
+### Code du modèle
+```
+models/gemini-1.5-pro
+```
+
+### Types de données acceptés
+- **Entrées**: Audio, images, vidéos et texte
+- **Sortie**: Texte
+
+### Limites de jetons
+- **Entrée**: 2 097 152 jetons
+- **Sortie**: 8 192 jetons
+
+### Limites média
+- Maximum images par requête : 7 200
+- Durée vidéo max : 2 heures
+- Durée audio max : ~19 heures
+
+### Limites de débit
+**Sans frais**:
+- 2 tr/min
+- 32 000 TPM
+- 50 RPD
+
+**Pay-as-you-go**:
+- 1 000 RPM
+- 4 millions de TPM
+
+### Fonctionnalités compatibles
+✅ Instructions système
+✅ Mode JSON
+✅ Schéma JSON
+✅ Paramètres de sécurité ajustables
+✅ Mise en cache
+✅ Appel de fonction
+✅ Exécution du code
+
+### Fonctionnalités non supportées
+❌ Accordage
+❌ Streaming bidirectionnel
+
+## Exemple d'utilisation avec Python
+
+```python
+import anthropic
+
+# Initialisation du client
+client = anthropic.Anthropic()
+
+# Création d'une requête
+message = client.messages.create(
+    model="gemini-1.5-pro",
+    max_tokens=8192,
+    temperature=0.7,
+    system="Vous êtes un assistant expert en analyse de données multimodales.",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Voici un document important à analyser..."
+                },
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/jpeg",
+                        "data": "..."
+                    }
+                }
+            ]
+        }
+    ]
+)
+
+# Affichage de la réponse
+print(message.content)
+```
+
+## Notes importantes
+- Un jeton équivaut à environ 4 caractères pour les modèles Gemini
+- 100 jetons correspondent à environ 60-80 mots en anglais
+- Les limites de débit maximales spécifiées ne sont pas garanties en raison des limites de capacité
+- Le modèle supporte plus de 30 langues incluant le français, l'anglais, le chinois, l'allemand, etc.
+
+## Version et Statut
+- Dernière version stable: `gemini-1.5-pro`
+- Versions stables disponibles:
+  - `gemini-1.5-pro-001`
+  - `gemini-1.5-pro-002`
+- Dernière mise à jour: Septembre 2024
+</doc>

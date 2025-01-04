@@ -1,0 +1,494 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>Chat</h2>
+        <button id="new-chat-btn" class="btn-secondary">
+            <i class="fas fa-plus"></i> Nouvelle conversation
+        </button>
+    </div>
+    <div id="chat-messages" class="chat-messages"></div>
+    <form id="chat-form" class="chat-form">
+        <input type="text" id="message-input" placeholder="Écrivez votre message..." required>
+        <button type="submit">Envoyer</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const newChatBtn = document.getElementById('new-chat-btn');
+
+    // Variable pour stocker le contexte
+    let currentContext = null;
+
+    // Fonction pour charger le contexte initial
+    async function loadInitialContext() {
+        try {
+            const response = await fetch('/get_initial_context');
+            const data = await response.json();
+            if (data.success) {
+                currentContext = data.context;
+                // Log plus détaillé du contexte
+                console.log('=== CONTEXTE INITIAL ===');
+                console.log('PROMPT SYSTÈME (longueur):', currentContext.prompt_systeme.length);
+                console.log('MÉMOIRE (longueur):', currentContext.memoire.length);
+                console.log('ESSAI (longueur):', currentContext.essai.length);
+                console.log('=== CONTENU COMPLET ===');
+                console.log('PROMPT SYSTÈME:', currentContext.prompt_systeme);
+                console.log('MÉMOIRE:', currentContext.memoire);
+                console.log('ESSAI:', currentContext.essai);
+            } else {
+                console.error('Erreur lors du chargement du contexte:', data.error);
+            }
+        } catch (error) {
+            console.error('Erreur technique lors du chargement du contexte:', error);
+        }
+    }
+
+    // Fonction pour démarrer une nouvelle conversation
+    async function startNewChat() {
+        // Demander confirmation si nécessaire
+        if (chatMessages.children.length > 0) {
+            if (!confirm('Voulez-vous vraiment démarrer une nouvelle conversation ? L\'historique actuel sera effacé.')) {
+                return;
+            }
+        }
+        
+        // Effacer l'historique local
+        localStorage.removeItem('chatMessages');
+        
+        // Vider la fenêtre de chat
+        chatMessages.innerHTML = '';
+        
+        try {
+            // 1. Charger les documents
+            const response = await fetch('/get_initial_context');
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error('Erreur lors du chargement des documents: ' + data.error);
+            }
+
+            // 2. Construire le premier message
+            const premierMessage = `<role>
+${data.context.prompt_systeme}
+</role>
+
+Voici les notes prises lors de vos derniers echanges avec l'utilisateur : 
+<memoire>
+${data.context.memoire}
+</memoire>
+
+Voici l'etat actuel du livre en cours de redaction sur la base de vos notes :
+<essai>
+${data.context.essai}
+</essai>`;
+
+            // 3. Afficher le premier message
+            appendMessage(premierMessage, 'user');
+
+            // Afficher l'animation de chargement
+            const loadingElement = showLoadingMessage();
+
+            // 4. Envoyer le message à Gemini
+            const messageResponse = await fetch('/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    message: premierMessage,
+                    history: []
+                })
+            });
+
+            const messageData = await messageResponse.json();
+            
+            // Cacher l'animation
+            hideLoadingMessage(loadingElement);
+            
+            // 5. Afficher la réponse ou l'erreur
+            if (messageData.success) {
+                appendMessage(messageData.response, 'assistant');
+            } else {
+                appendMessage('Erreur: ' + messageData.error, 'assistant error');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            appendMessage('Une erreur est survenue: ' + error.message, 'assistant error');
+        }
+    }
+
+    // Gestionnaire d'événement pour le bouton nouvelle conversation
+    newChatBtn.addEventListener('click', startNewChat);
+
+    // Fonction pour formater la date
+    function formatDate(date) {
+        return date.toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Fonction pour sauvegarder les messages dans le localStorage
+    function saveMessages() {
+        const messages = [];
+        chatMessages.querySelectorAll('.message').forEach(messageDiv => {
+            messages.push({
+                content: messageDiv.querySelector('.message-content').textContent,
+                sender: messageDiv.classList.contains('message-user') ? 'user' : 'assistant',
+                timestamp: new Date().toISOString()
+            });
+        });
+        console.log('Sauvegarde des messages:', messages);
+        localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
+
+    // Fonction pour charger les messages du localStorage
+    function loadMessages() {
+        console.log('Tentative de chargement des messages...');
+        const savedMessages = localStorage.getItem('chatMessages');
+        console.log('Messages sauvegardés:', savedMessages);
+        if (savedMessages) {
+            const messages = JSON.parse(savedMessages);
+            console.log('Messages parsés:', messages);
+            messages.forEach(message => {
+                appendMessage(message.content, message.sender, false);
+            });
+        }
+    }
+
+    // Fonction pour copier le message formaté
+    function copyFormattedMessage(content, sender) {
+        const date = formatDate(new Date());
+        const author = sender === 'user' ? 'MOI' : 'ASSISTANT';
+        const formattedText = `# NOTE DE CONVERSATION DU ${date} PAR ${author}\n${content}`;
+        
+        navigator.clipboard.writeText(formattedText).then(() => {
+            // Afficher une notification de succès
+            const notification = document.createElement('div');
+            notification.className = 'copy-notification';
+            notification.textContent = 'Message copié !';
+            document.body.appendChild(notification);
+            
+            // Supprimer la notification après 2 secondes
+            setTimeout(() => {
+                notification.remove();
+            }, 2000);
+        });
+    }
+
+    // Fonction pour afficher l'animation de chargement
+    function showLoadingMessage() {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message message-assistant loading-message';
+        
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing';
+        
+        // Créer les trois points
+        for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'typing-dot';
+            typingDiv.appendChild(dot);
+        }
+        
+        messageDiv.appendChild(typingDiv);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        return messageDiv;
+    }
+
+    // Fonction pour supprimer l'animation de chargement
+    function hideLoadingMessage(loadingElement) {
+        if (loadingElement && loadingElement.parentNode) {
+            loadingElement.remove();
+        }
+    }
+
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        // Afficher le message de l'utilisateur
+        appendMessage(message, 'user');
+
+        // Afficher l'animation de chargement
+        const loadingElement = showLoadingMessage();
+
+        try {
+            // Log avant envoi
+            console.log('=== ENVOI DU MESSAGE ===');
+            console.log('Message:', message);
+            
+            // Récupérer l'historique des messages (sans le message qu'on vient d'ajouter)
+            const history = Array.from(chatMessages.querySelectorAll('.message')).slice(0, -1).map(messageDiv => ({
+                content: messageDiv.querySelector('.message-content').textContent,
+                sender: messageDiv.classList.contains('message-user') ? 'user' : 'assistant'
+            }));
+
+            // Envoyer le message à l'API
+            const response = await fetch('/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    message: message,
+                    history: history
+                })
+            });
+
+            const data = await response.json();
+            
+            // Cacher l'animation
+            hideLoadingMessage(loadingElement);
+            
+            if (data.success) {
+                // Afficher la réponse de l'assistant
+                appendMessage(data.response, 'assistant');
+            } else {
+                console.error('Erreur API:', data.error);
+                appendMessage('Erreur: ' + data.error, 'assistant error');
+            }
+        } catch (error) {
+            // Cacher l'animation en cas d'erreur
+            hideLoadingMessage(loadingElement);
+            console.error('Erreur technique:', error);
+            appendMessage('Erreur technique: ' + error.message, 'assistant error');
+        }
+    });
+
+    // Fonction pour ajouter un message à la conversation
+    function appendMessage(content, sender, save = true) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message message-${sender}`;
+        
+        // Créer le conteneur de message
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content markdown';
+        messageContent.innerText = content;  // Utiliser innerText pour préserver le formatage
+        
+        // Créer le bouton de copie
+        const copyButton = document.createElement('button');
+        copyButton.className = 'copy-button';
+        copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+        copyButton.title = 'Copier le message';
+        copyButton.onclick = () => copyFormattedMessage(content, sender);
+        
+        // Ajouter le contenu et le bouton au message
+        messageDiv.appendChild(messageContent);
+        messageDiv.appendChild(copyButton);
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        if (save) {
+            saveMessages();
+        }
+    }
+
+    // Charger les messages au démarrage
+    loadMessages();
+
+    // Charger le contexte initial
+    loadInitialContext();
+});
+</script>
+
+<style>
+.chat-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chat-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-secondary i {
+    font-size: 0.9em;
+}
+
+.chat-messages {
+    height: 500px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #f9f9f9;
+}
+
+.message {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 10px;
+    max-width: 70%;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.message-content {
+    flex-grow: 1;
+}
+
+.message-user {
+    background: #007bff;
+    color: white;
+    margin-left: auto;
+}
+
+.message-assistant {
+    background: white;
+    border: 1px solid #ddd;
+}
+
+.message-assistant.error {
+    background: #ffe6e6;
+    border-color: #ffcccc;
+    color: #cc0000;
+}
+
+.copy-button {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 5px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.copy-button:hover {
+    opacity: 1;
+}
+
+.message-user .copy-button {
+    color: white;
+}
+
+.message-assistant .copy-button {
+    color: #333;
+}
+
+.copy-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(20px); }
+    20% { opacity: 1; transform: translateY(0); }
+    80% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
+
+.chat-form {
+    display: flex;
+    gap: 10px;
+}
+
+#message-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* Animation de chargement */
+.loading-message {
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.typing {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #007bff;
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: typing 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+</style>
+
+<!-- Ajout de Font Awesome pour l'icône de copie -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
