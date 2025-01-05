@@ -43,3 +43,6 @@ def create_app():
         db.create_all()
     
     return app
+
+# Création de l'instance de l'application
+app = create_app()
