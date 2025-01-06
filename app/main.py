@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required, current_user
+from flask_wtf import FlaskForm
+from wtforms import HiddenField
 from .utils import get_user_files, save_user_file
-from . import db
+from . import db, csrf
 try:
     import google.generativeai as genai
     GEMINI_AVAILABLE = True
@@ -11,6 +13,9 @@ except ImportError:
 
 main = Blueprint('main', __name__)
 
+class CSRFForm(FlaskForm):
+    csrf_token = HiddenField()
+
 @main.route('/')
 def index():
     return render_template('index.html')
@@ -19,7 +24,8 @@ def index():
 @login_required
 def profile():
     user_files = get_user_files(current_user.email)
-    return render_template('profile.html', files=user_files)
+    form = CSRFForm()
+    return render_template('profile.html', files=user_files, form=form)
 
 @main.route('/chat')
 @login_required
@@ -43,6 +49,7 @@ def get_initial_context():
 
 @main.route('/send_message', methods=['POST'])
 @login_required
+@csrf.exempt
 def send_message():
     try:
         print("\n=== RÉCEPTION D'UN MESSAGE ===")

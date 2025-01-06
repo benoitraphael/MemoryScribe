@@ -191,6 +191,7 @@ button:hover {
 <div class="chat-container">
     <div id="chat-messages" class="chat-messages"></div>
     <form id="chat-form" class="chat-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <textarea 
             id="message-input" 
             class="auto-resize-textarea"
@@ -478,12 +479,16 @@ ${data.context.essai}
                 sender: messageDiv.classList.contains('message-user') ? 'user' : 'assistant'
             }));
 
+            // Récupérer le token CSRF
+            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
             // Envoyer le message à l'API
             const response = await fetch('/send_message', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify({ 
                     message: message,
