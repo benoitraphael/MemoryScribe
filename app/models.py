@@ -7,8 +7,13 @@ from base64 import b64encode, b64decode
 from pathlib import Path
 
 # Clé de chiffrement pour les clés API
-# En production, cette clé devrait être stockée dans une variable d'environnement
 def get_or_create_key():
+    # En production, utiliser la variable d'environnement
+    env_key = os.getenv('ENCRYPTION_KEY')
+    if env_key:
+        return env_key.encode()
+        
+    # En développement, utiliser un fichier
     key_file = Path('instance/encryption.key')
     if key_file.exists():
         with open(key_file, 'rb') as f:
@@ -26,8 +31,8 @@ cipher_suite = Fernet(ENCRYPTION_KEY)
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
-    api_key_encrypted = db.Column(db.String(255))
+    password_hash = db.Column(db.String(512))  
+    api_key_encrypted = db.Column(db.String(512))
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
