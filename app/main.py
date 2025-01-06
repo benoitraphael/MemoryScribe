@@ -100,10 +100,13 @@ def send_message():
                 )
             )
             
+            # Récupérer la réponse
+            assistant_response = response.text.strip()
+            
             print("Réponse reçue de Gemini")
             return jsonify({
                 "success": True,
-                "response": response.text
+                "response": assistant_response
             })
             
         except Exception as e:
