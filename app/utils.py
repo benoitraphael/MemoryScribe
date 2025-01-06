@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from flask import current_app
 
 DEFAULT_FILES = {
     'prompt_systeme.md': """# Configuration de l'Assistant
@@ -19,80 +20,72 @@ Je suis votre assistant personnel. Voici comment je dois me comporter :
 
 3. Objectifs
 - M'aider à développer mes idées
-- Rédiger et améliorer du contenu
-- Garder une trace de nos échanges importants
-
-Modifiez ces instructions selon vos besoins !
-""",
-
+- Proposer des suggestions pertinentes
+- Maintenir une conversation constructive""",
+    
     'memoire.md': """# Mémoire des Conversations
 
-Ce document contient les notes importantes de nos conversations.
-Elles permettent à l'assistant de se souvenir de nos échanges précédents
-et de mieux personnaliser ses réponses.
+Ce document conserve les éléments importants de nos conversations.
 
-## Comment l'utiliser
-1. Copiez les messages importants depuis le chat (bouton de copie)
-2. Collez-les ici en les organisant par date
-3. L'assistant utilisera ces informations dans vos prochaines conversations
+## Points Clés
+- [À venir]
 
----
-# Vos notes apparaîtront ici
-""",
+## Préférences Notées
+- [À venir]""",
+    
+    'essai.md': """# Espace de Travail
 
-    'essai.md': """# Livre en Cours de Rédaction
+Ce document sert d'espace de travail pour développer vos idées.
 
-Ce document contient le texte en cours de rédaction, basé sur nos conversations.
-L'assistant s'en servira comme référence pour maintenir la cohérence
-dans la génération de contenu.
+## Notes et Idées
+- [À venir]
 
-## Structure Suggérée
-1. Introduction
-2. Développement
-3. Conclusion
-
----
-Votre texte apparaîtra ici...
-"""
+## Développements
+- [À venir]"""
 }
+
+def get_user_directory(user_email):
+    """Retourne le chemin du répertoire de l'utilisateur."""
+    base_path = current_app.config['USER_DATA_PATH']
+    user_dir = os.path.join(base_path, user_email)
+    return user_dir
 
 def init_user_files(user_email):
     """Crée les fichiers nécessaires pour un nouvel utilisateur."""
-    # Créer le dossier utilisateur
-    user_dir = Path("instance/users") / user_email
-    user_dir.mkdir(parents=True, exist_ok=True)
+    user_dir = get_user_directory(user_email)
     
-    # Créer les fichiers avec leur contenu initial
+    # Créer le répertoire utilisateur s'il n'existe pas
+    os.makedirs(user_dir, exist_ok=True)
+    
+    # Créer les fichiers par défaut
     for filename, content in DEFAULT_FILES.items():
-        file_path = user_dir / filename
-        if not file_path.exists():
+        file_path = os.path.join(user_dir, filename)
+        if not os.path.exists(file_path):
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
-                
+
 def get_user_files(user_email):
     """Récupère le contenu des fichiers d'un utilisateur."""
-    user_dir = Path("instance/users") / user_email
-    files = {}
+    user_dir = get_user_directory(user_email)
+    files_content = {}
     
-    for filename in ["memoire.md", "essai.md", "prompt_systeme.md"]:
-        file_path = user_dir / filename
-        if file_path.exists():
+    for filename in DEFAULT_FILES.keys():
+        file_path = os.path.join(user_dir, filename)
+        try:
             with open(file_path, 'r', encoding='utf-8') as f:
-                files[filename] = f.read()
-        else:
-            files[filename] = ""
-            
-    return files
+                files_content[filename] = f.read()
+        except FileNotFoundError:
+            files_content[filename] = DEFAULT_FILES[filename]
+    
+    return files_content
 
 def save_user_file(user_email, file_type, content):
     """Sauvegarde le contenu d'un fichier utilisateur."""
-    if file_type not in ["memoire.md", "essai.md", "prompt_systeme.md"]:
-        raise ValueError("Type de fichier invalide")
-        
-    user_dir = Path("instance/users") / user_email
-    file_path = user_dir / file_type
+    user_dir = get_user_directory(user_email)
     
+    # Créer le répertoire s'il n'existe pas
+    os.makedirs(user_dir, exist_ok=True)
+    
+    file_path = os.path.join(user_dir, file_type)
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)
-    
-    return True
