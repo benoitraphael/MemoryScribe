@@ -21,6 +21,7 @@
         </div>
         <div class="card-body">
             <form method="POST" action="{{ url_for('main.save_api_key') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="mb-3">
                     <label for="api_key" class="form-label">Clé API Gemini</label>
                     <input type="password" class="form-control" id="api_key" name="api_key" 
