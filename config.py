@@ -28,10 +28,8 @@ class Config:
     GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
     
     # Configuration du stockage des fichiers
-    # En production (Render), utiliser /opt/render/project/src/
+    # En production (Render), utiliser /opt/render/project/src/user_data
     # En local, utiliser le dossier instance/
     IS_PRODUCTION = os.environ.get('RENDER') is not None
-    if IS_PRODUCTION:
-        USER_DATA_PATH = '/opt/render/project/src/user_data'
-    else:
-        USER_DATA_PATH = os.path.join('instance', 'users')
+    USER_DATA_PATH = '/opt/render/project/src/user_data' if IS_PRODUCTION else os.path.join('instance', 'users')
+    print(f"User data path: {USER_DATA_PATH}")
