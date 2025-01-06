@@ -39,7 +39,7 @@
     <!-- Gestion des fichiers -->
     <div class="card">
         <div class="card-header">
-            <h4>Mes documents</h4>
+            <h4>Gestion des documents</h4>
         </div>
         <div class="card-body">
             <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -56,18 +56,21 @@
             <div class="tab-content mt-3" id="myTabContent">
                 <div class="tab-pane fade show active" id="memoire" role="tabpanel">
                     <form class="file-form" data-file="memoire.md">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <textarea class="form-control mb-3" rows="10">{{ files['memoire.md'] }}</textarea>
                         <button type="submit" class="btn btn-primary">Sauvegarder</button>
                     </form>
                 </div>
                 <div class="tab-pane fade" id="essai" role="tabpanel">
                     <form class="file-form" data-file="essai.md">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <textarea class="form-control mb-3" rows="10">{{ files['essai.md'] }}</textarea>
                         <button type="submit" class="btn btn-primary">Sauvegarder</button>
                     </form>
                 </div>
                 <div class="tab-pane fade" id="prompt" role="tabpanel">
                     <form class="file-form" data-file="prompt_systeme.md">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <textarea class="form-control mb-3" rows="10">{{ files['prompt_systeme.md'] }}</textarea>
                         <button type="submit" class="btn btn-primary">Sauvegarder</button>
                     </form>
@@ -86,11 +89,13 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const fileName = this.dataset.file;
             const content = this.querySelector('textarea').value;
+            const csrfToken = this.querySelector('input[name="csrf_token"]').value;
             
             fetch('{{ url_for("main.save_file") }}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify({
                     file_name: fileName,
