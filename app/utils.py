@@ -7,7 +7,7 @@ DEFAULT_FILES = {
     'prompt_systeme.md': """# Configuration de l'Assistant
 
 ## Instructions pour l'Assistant
-Je suis votre assistant personnel. Voici comment je dois me comporter :
+Tu es mon assistant personnel. Voici comment tu dois te comporter :
 
 1. Ton et Style
 - Soyez professionnel mais amical
@@ -16,7 +16,7 @@ Je suis votre assistant personnel. Voici comment je dois me comporter :
 
 2. Utilisation du Contexte
 - Référez-vous à notre historique dans <memoire> pour personnaliser vos réponses
-- Utilisez les informations de <essai> quand c'est pertinent
+- Utilisez les informations de <essai> quand c'est pertinent pour avoir une idée de l'état de l'avancée de notre livre.
 - Gardez une cohérence dans nos échanges
 
 3. Objectifs
@@ -28,21 +28,24 @@ Je suis votre assistant personnel. Voici comment je dois me comporter :
 
 Ce document conserve les éléments importants de nos conversations.
 
-## Points Clés
-- [À venir]
+<contexte_general>
+Ici sont stockées les informations essentielles à retenir comme : mon nom et ma bio, et quelques informations clés sur moi ou sur notre conversations.
 
-## Préférences Notées
-- [À venir]""",
+</contexte_general>
+
+<notes>
+Ici sont stockées l'historique des notes importantes copiées-collées depuis nos conversations pour en conserver la mémoire pour nos futurs échanges.
+C'est ici que je vais coller les notes de nos échanges.
+
+</notes>""",
     
-    'essai.md': """# Espace de Travail
+    'essai.md': """# Écriture de notre livre
 
-Ce document sert d'espace de travail pour développer vos idées.
+Ce document sert d'espace pour conserver la rédaction de notre livre
 
-## Notes et Idées
-- [À venir]
+## État de l'écriture
 
-## Développements
-- [À venir]"""
+Pour l'instant, rien n'a été écrit ! Commençons à creuser ensemble nos sujets avant de commencer l'écriture."""
 }
 
 def get_user_directory(user_email):
