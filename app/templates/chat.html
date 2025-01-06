@@ -1,16 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="header-section">
+    <h2>Chat</h2>
+    <div style="flex-grow: 0.95"></div>
+    <button id="new-chat-btn" class="btn-secondary">
+        <i class="fas fa-plus"></i> Nouvelle conversation
+    </button>
+    <div style="flex-grow: 0.05"></div>
+</div>
+
 <div class="chat-container">
-    <div class="chat-header">
-        <h2>Chat</h2>
-        <button id="new-chat-btn" class="btn-secondary">
-            <i class="fas fa-plus"></i> Nouvelle conversation
-        </button>
-    </div>
     <div id="chat-messages" class="chat-messages"></div>
     <form id="chat-form" class="chat-form">
-        <input type="text" id="message-input" placeholder="Écrivez votre message..." required>
+        <textarea 
+            id="message-input" 
+            class="auto-resize-textarea"
+            placeholder="Écrivez votre message..." 
+            required
+            rows="1"
+        ></textarea>
         <button type="submit">Envoyer</button>
     </form>
 </div>
@@ -21,6 +30,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageInput = document.getElementById('message-input');
     const chatMessages = document.getElementById('chat-messages');
     const newChatBtn = document.getElementById('new-chat-btn');
+
+    // Fonction pour ajuster automatiquement la hauteur du textarea
+    function autoResizeTextarea() {
+        messageInput.style.height = 'auto';
+        messageInput.style.height = messageInput.scrollHeight + 'px';
+    }
+
+    // Événements pour le redimensionnement automatique
+    messageInput.addEventListener('input', autoResizeTextarea);
+    messageInput.addEventListener('change', autoResizeTextarea);
+
+    // Réinitialiser la hauteur après l'envoi
+    function resetTextarea() {
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+    }
 
     // Variable pour stocker le contexte
     let currentContext = null;
@@ -269,6 +294,9 @@ ${data.context.essai}
             console.error('Erreur technique:', error);
             appendMessage('Erreur technique: ' + error.message, 'assistant error');
         }
+        
+        // Réinitialiser la hauteur du textarea
+        resetTextarea();
     });
 
     // Fonction pour ajouter un message à la conversation
@@ -309,26 +337,32 @@ ${data.context.essai}
 </script>
 
 <style>
-.chat-container {
+.header-section {
     max-width: 800px;
     margin: 20px auto;
-    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;  /* Espace entre le titre et le bouton */
+    margin-bottom: 40px;
 }
 
-.chat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+.header-section h2 {
+    margin: 0;
+}
+
+.chat-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
 .chat-header h2 {
     margin: 0;
-    color: #333;
+    color: #202123;
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #5436DA;
     color: white;
     border: none;
     padding: 8px 16px;
@@ -341,20 +375,16 @@ ${data.context.essai}
 }
 
 .btn-secondary:hover {
-    background: #5a6268;
-}
-
-.btn-secondary i {
-    font-size: 0.9em;
+    background: #4529B0;
 }
 
 .chat-messages {
     height: 500px;
     overflow-y: auto;
-    border: 1px solid #ddd;
+    border: 1px solid #E2E2E4;
     padding: 20px;
     margin-bottom: 20px;
-    background: #f9f9f9;
+    background: #F8F8FA;
 }
 
 .message {
@@ -368,31 +398,29 @@ ${data.context.essai}
     gap: 10px;
 }
 
-.message-content {
-    flex-grow: 1;
-}
-
 .message-user {
-    background: #007bff;
-    color: white;
+    background: #F5F5F7;
+    color: #202123;
     margin-left: auto;
+    border: 1px solid #E2E2E4;
 }
 
 .message-assistant {
-    background: white;
-    border: 1px solid #ddd;
+    background: #FFFFFF;
+    border: 1px solid #E2E2E4;
+    color: #202123;
 }
 
 .message-assistant.error {
-    background: #ffe6e6;
-    border-color: #ffcccc;
-    color: #cc0000;
+    background: #FEF2F2;
+    border-color: #FEE2E2;
+    color: #991B1B;
 }
 
 .copy-button {
     background: transparent;
     border: none;
-    color: inherit;
+    color: #5436DA;
     cursor: pointer;
     padding: 5px;
     opacity: 0.6;
@@ -403,47 +431,39 @@ ${data.context.essai}
     opacity: 1;
 }
 
-.message-user .copy-button {
-    color: white;
-}
-
-.message-assistant .copy-button {
-    color: #333;
-}
-
-.copy-notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    animation: fadeInOut 2s ease-in-out;
-}
-
-@keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(20px); }
-    20% { opacity: 1; transform: translateY(0); }
-    80% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-20px); }
-}
-
 .chat-form {
     display: flex;
     gap: 10px;
+    padding: 15px;
+    background: #FFFFFF;
+    border: 1px solid #E2E2E4;
+    border-radius: 8px;
 }
 
-#message-input {
+.auto-resize-textarea {
     flex-grow: 1;
+    min-height: 40px;
+    max-height: 200px;
     padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    border: 1px solid #E2E2E4;
+    border-radius: 4px;
+    resize: none;
+    overflow-y: auto;
+    line-height: 1.5;
+    font-family: inherit;
+    background: #FFFFFF;
+    color: #202123;
+}
+
+.auto-resize-textarea:focus {
+    outline: none;
+    border-color: #5436DA;
+    box-shadow: 0 0 0 2px rgba(84,54,218,.25);
 }
 
 button {
     padding: 10px 20px;
-    background: #007bff;
+    background: #5436DA;
     color: white;
     border: none;
     border-radius: 5px;
@@ -451,41 +471,14 @@ button {
 }
 
 button:hover {
-    background: #0056b3;
+    background: #4529B0;
 }
 
-/* Animation de chargement */
 .loading-message {
-    background: #f8f9fa;
+    background: #F8F8FA;
+    border: 1px solid #E2E2E4;
     border-radius: 10px;
     margin: 10px;
-    padding: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.typing {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.typing-dot {
-    width: 8px;
-    height: 8px;
-    background: #007bff;
-    border-radius: 50%;
-    opacity: 0.3;
-    animation: typing 1.4s infinite;
-}
-
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typing {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.2); }
 }
 </style>
 
