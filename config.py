@@ -9,6 +9,9 @@ class Config:
     # Configuration Flask
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-à-changer'
     
+    # Configuration CSRF
+    WTF_CSRF_CHECK_DEFAULT = False  # Désactive la vérification CSRF par défaut
+    
     # Configuration Base de données
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///app.db'
