@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from flask import current_app
+from config import Config
 
 DEFAULT_FILES = {
     'prompt_systeme.md': """# Configuration de l'Assistant
@@ -46,13 +47,18 @@ Ce document sert d'espace de travail pour développer vos idées.
 
 def get_user_directory(user_email):
     """Retourne le chemin du répertoire de l'utilisateur."""
-    base_path = current_app.config['USER_DATA_PATH']
+    # Utiliser la configuration directement au lieu de current_app
+    config = Config()
+    base_path = config.USER_DATA_PATH
+    print(f"Using base path: {base_path}")  # Debug log
     user_dir = os.path.join(base_path, user_email)
+    print(f"User directory: {user_dir}")  # Debug log
     return user_dir
 
 def init_user_files(user_email):
     """Crée les fichiers nécessaires pour un nouvel utilisateur."""
     user_dir = get_user_directory(user_email)
+    print(f"Creating user directory: {user_dir}")  # Debug log
     
     # Créer le répertoire utilisateur s'il n'existe pas
     os.makedirs(user_dir, exist_ok=True)
@@ -63,6 +69,7 @@ def init_user_files(user_email):
         if not os.path.exists(file_path):
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
+                print(f"Created file: {file_path}")  # Debug log
 
 def get_user_files(user_email):
     """Récupère le contenu des fichiers d'un utilisateur."""
