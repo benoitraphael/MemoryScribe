@@ -369,24 +369,61 @@ ${data.context.essai}
         }
     }
 
+    // Fonction pour convertir le Markdown en HTML
+    function markdownToHtml(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Gras
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')              // Italique
+            .replace(/\n/g, '<br>');                           // Retours à la ligne
+    }
+
     // Fonction pour copier le message formaté
-    function copyFormattedMessage(content, sender) {
-        const date = formatDate(new Date());
-        const author = sender === 'user' ? 'MOI' : 'ASSISTANT';
-        const formattedText = `# NOTE DE CONVERSATION DU ${date} PAR ${author}\n${content}`;
+    function copyFormattedMessage(messageContent) {
+        const date = new Date();
+        const formattedDate = formatDate(date);
+        const markdownContent = messageContent.dataset.markdown;  // Utiliser le Markdown original
         
-        navigator.clipboard.writeText(formattedText).then(() => {
-            // Afficher une notification de succès
-            const notification = document.createElement('div');
-            notification.className = 'copy-notification';
-            notification.textContent = 'Message copié !';
-            document.body.appendChild(notification);
-            
-            // Supprimer la notification après 2 secondes
+        const textToCopy = `# NOTE DE CONVERSATION DU ${formattedDate}\n${markdownContent}`;
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            // Animation de confirmation
+            const copyButton = messageContent.nextElementSibling;
+            copyButton.style.opacity = '1';
             setTimeout(() => {
-                notification.remove();
-            }, 2000);
+                copyButton.style.opacity = '0.6';
+            }, 200);
         });
+    }
+
+    // Fonction pour ajouter un message à la conversation
+    function appendMessage(content, sender, save = true) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message message-${sender}`;
+        
+        // Créer le conteneur de message
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        messageContent.dataset.markdown = content;              // Stocker le Markdown original
+        messageContent.innerHTML = markdownToHtml(content);     // Afficher le HTML converti
+        messageContent.style.whiteSpace = 'pre-wrap';
+        
+        // Créer le bouton de copie
+        const copyButton = document.createElement('button');
+        copyButton.className = 'copy-button';
+        copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+        copyButton.title = 'Copier le message';
+        copyButton.onclick = () => copyFormattedMessage(messageContent);
+        
+        // Ajouter le contenu et le bouton au message
+        messageDiv.appendChild(messageContent);
+        messageDiv.appendChild(copyButton);
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        if (save) {
+            saveMessages();
+        }
     }
 
     // Fonction pour afficher l'animation de chargement
@@ -476,36 +513,6 @@ ${data.context.essai}
         // Réinitialiser la hauteur du textarea
         resetTextarea();
     });
-
-    // Fonction pour ajouter un message à la conversation
-    function appendMessage(content, sender, save = true) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message message-${sender}`;
-        
-        // Créer le conteneur de message
-        const messageContent = document.createElement('div');
-        messageContent.className = 'message-content';
-        messageContent.textContent = content;
-        messageContent.style.whiteSpace = 'pre-wrap';
-        
-        // Créer le bouton de copie
-        const copyButton = document.createElement('button');
-        copyButton.className = 'copy-button';
-        copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-        copyButton.title = 'Copier le message';
-        copyButton.onclick = () => copyFormattedMessage(content, sender);
-        
-        // Ajouter le contenu et le bouton au message
-        messageDiv.appendChild(messageContent);
-        messageDiv.appendChild(copyButton);
-        
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        if (save) {
-            saveMessages();
-        }
-    }
 
     // Charger les messages au démarrage
     loadMessages();
