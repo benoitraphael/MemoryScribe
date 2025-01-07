@@ -4,6 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import HiddenField
 from .utils import get_user_files, save_user_file
 from . import db, csrf
+
 try:
     import google.generativeai as genai
     GEMINI_AVAILABLE = True
@@ -49,7 +50,6 @@ def get_initial_context():
 
 @main.route('/send_message', methods=['POST'])
 @login_required
-@csrf.exempt
 def send_message():
     try:
         print("\n=== RÉCEPTION D'UN MESSAGE ===")
@@ -132,6 +132,7 @@ def send_message():
 
 @main.route('/save_file', methods=['POST'])
 @login_required
+@csrf.exempt
 def save_file():
     try:
         data = request.get_json()

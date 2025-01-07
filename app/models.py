@@ -5,6 +5,7 @@ from cryptography.fernet import Fernet
 import os
 from base64 import b64encode, b64decode
 from pathlib import Path
+from datetime import datetime
 
 # Clé de chiffrement pour les clés API
 def get_or_create_key():
