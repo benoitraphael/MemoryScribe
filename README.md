@@ -1,6 +1,6 @@
 # MemoryScribe
 
-MemoryScribe est un assistant conversationnel intelligent avec mémoire et génération d'essai, utilisant l'API Gemini de Google.
+MemoryScribe est un assistant conversationnel intelligent et introspectif avec mémoire, utilisant l'API Gemini de Google.
 
 ## Fonctionnalités
 
@@ -19,7 +19,7 @@ MemoryScribe est un assistant conversationnel intelligent avec mémoire et gén�
 - 📝 **Gestion des documents**
   - 3 documents par utilisateur en Markdown :
     1. Mémoire (stockage des conversations importantes)
-    2. Essai (texte généré/édité)
+    2. Synthèse (points clés de notre conversation)
     3. Prompt système (personnalisation de l'assistant)
   - Éditeur Markdown avec sauvegarde automatique
 
