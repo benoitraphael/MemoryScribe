@@ -130,6 +130,31 @@ def send_message():
             "error": str(e)
         }), 500
 
+@main.route('/append_to_memory', methods=['POST'])
+@login_required
+def append_to_memory():
+    try:
+        data = request.get_json()
+        content = data.get('content')
+        
+        if not content:
+            return jsonify({'success': False, 'error': 'Contenu manquant'}), 400
+            
+        # Récupérer le contenu actuel de memoire.md
+        user_files = get_user_files(current_user.email)
+        current_content = user_files.get('memoire.md', '')
+        
+        # Ajouter le nouveau contenu avec deux sauts de ligne pour la séparation
+        new_content = current_content + ('\n\n' if current_content else '') + content
+        
+        # Sauvegarder le fichier mis à jour
+        save_user_file(current_user.email, 'memoire.md', new_content)
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Erreur lors de l'ajout à la mémoire: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @main.route('/save_file', methods=['POST'])
 @login_required
 @csrf.exempt

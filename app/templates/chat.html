@@ -380,20 +380,41 @@ ${data.context.essai}
     }
 
     // Fonction pour copier le message formaté
-    function copyFormattedMessage(content) {
+    function copyFormattedMessage(content, sender) {
         const date = new Date();
         const formattedDate = formatDate(date);
-        const markdownContent = content.dataset.markdown;  // Utiliser le Markdown original
+        const markdownContent = content.getAttribute('data-raw-content');
         
-        const textToCopy = `# NOTE DE CONVERSATION DU ${formattedDate}\n${markdownContent}`;
+        const formattedContent = `# NOTE DE CONVERSATION DU ${formattedDate} PAR ${sender}\n${markdownContent}`;
         
-        navigator.clipboard.writeText(textToCopy).then(() => {
-            // Animation de confirmation
-            const copyButton = content.nextElementSibling;
-            copyButton.style.opacity = '1';
-            setTimeout(() => {
-                copyButton.style.opacity = '0.6';
-            }, 200);
+        // Envoyer le contenu à la mémoire
+        fetch('/append_to_memory', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: formattedContent
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Animation de confirmation
+                const copyButton = content.nextElementSibling;
+                copyButton.innerHTML = '<i class="fas fa-check"></i>';
+                copyButton.style.opacity = '1';
+                setTimeout(() => {
+                    copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+                    copyButton.style.opacity = '0.6';
+                }, 2000);
+            } else {
+                alert('Erreur lors de la sauvegarde : ' + (data.error || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la sauvegarde');
         });
     }
 
@@ -410,7 +431,7 @@ ${data.context.essai}
         const copyButton = document.createElement('button');
         copyButton.classList.add('copy-button');
         copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-        copyButton.onclick = () => copyFormattedMessage(contentDiv);
+        copyButton.onclick = () => copyFormattedMessage(contentDiv, sender);
         
         messageDiv.appendChild(contentDiv);
         messageDiv.appendChild(copyButton);
