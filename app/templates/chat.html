@@ -287,7 +287,7 @@ Voici les notes prises lors de vos derniers echanges avec l'utilisateur :
 ${data.context.memoire}
 </memoire>
 
-Voici l'etat actuel du livre en cours de redaction sur la base de vos notes :
+Voici la synthèse de vos échanges sur la base de vos notes :
 <essai>
 ${data.context.essai}
 </essai>`;
@@ -347,7 +347,7 @@ ${data.context.essai}
         const messages = [];
         chatMessages.querySelectorAll('.message').forEach(messageDiv => {
             messages.push({
-                content: messageDiv.querySelector('.message-content').textContent,
+                content: messageDiv.querySelector('.message-content').getAttribute('data-raw-content') || messageDiv.querySelector('.message-content').textContent,
                 sender: messageDiv.classList.contains('message-user') ? 'user' : 'assistant',
                 timestamp: new Date().toISOString()
             });
@@ -365,7 +365,8 @@ ${data.context.essai}
             const messages = JSON.parse(savedMessages);
             console.log('Messages parsés:', messages);
             messages.forEach(message => {
-                appendMessage(message.content, message.sender, false);
+                const formattedContent = markdownToHtml(message.content);
+                appendMessage(message.content, message.sender, false, formattedContent);
             });
         }
     }
@@ -379,16 +380,16 @@ ${data.context.essai}
     }
 
     // Fonction pour copier le message formaté
-    function copyFormattedMessage(messageContent) {
+    function copyFormattedMessage(content) {
         const date = new Date();
         const formattedDate = formatDate(date);
-        const markdownContent = messageContent.dataset.markdown;  // Utiliser le Markdown original
+        const markdownContent = content.dataset.markdown;  // Utiliser le Markdown original
         
         const textToCopy = `# NOTE DE CONVERSATION DU ${formattedDate}\n${markdownContent}`;
         
         navigator.clipboard.writeText(textToCopy).then(() => {
             // Animation de confirmation
-            const copyButton = messageContent.nextElementSibling;
+            const copyButton = content.nextElementSibling;
             copyButton.style.opacity = '1';
             setTimeout(() => {
                 copyButton.style.opacity = '0.6';
@@ -397,31 +398,27 @@ ${data.context.essai}
     }
 
     // Fonction pour ajouter un message à la conversation
-    function appendMessage(content, sender, save = true) {
+    function appendMessage(content, sender, save = true, formattedContent = null) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = `message message-${sender}`;
+        messageDiv.classList.add('message', sender === 'user' ? 'message-user' : 'message-assistant');
         
-        // Créer le conteneur de message
-        const messageContent = document.createElement('div');
-        messageContent.className = 'message-content';
-        messageContent.dataset.markdown = content;              // Stocker le Markdown original
-        messageContent.innerHTML = markdownToHtml(content);     // Afficher le HTML converti
-        messageContent.style.whiteSpace = 'pre-wrap';
+        const contentDiv = document.createElement('div');
+        contentDiv.classList.add('message-content');
+        contentDiv.setAttribute('data-raw-content', content);
+        contentDiv.innerHTML = formattedContent || markdownToHtml(content);
         
-        // Créer le bouton de copie
         const copyButton = document.createElement('button');
-        copyButton.className = 'copy-button';
+        copyButton.classList.add('copy-button');
         copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-        copyButton.title = 'Copier le message';
-        copyButton.onclick = () => copyFormattedMessage(messageContent);
+        copyButton.onclick = () => copyFormattedMessage(contentDiv);
         
-        // Ajouter le contenu et le bouton au message
-        messageDiv.appendChild(messageContent);
+        messageDiv.appendChild(contentDiv);
         messageDiv.appendChild(copyButton);
-        
         chatMessages.appendChild(messageDiv);
+        
+        // Scroll to bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
-
+        
         if (save) {
             saveMessages();
         }
@@ -430,15 +427,15 @@ ${data.context.essai}
     // Fonction pour afficher l'animation de chargement
     function showLoadingMessage() {
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'message message-assistant loading-message';
+        messageDiv.classList.add('message', 'message-assistant', 'loading-message');
         
         const typingDiv = document.createElement('div');
-        typingDiv.className = 'typing';
+        typingDiv.classList.add('typing');
         
         // Créer les trois points
         for (let i = 0; i < 3; i++) {
             const dot = document.createElement('div');
-            dot.className = 'typing-dot';
+            dot.classList.add('typing-dot');
             typingDiv.appendChild(dot);
         }
         
