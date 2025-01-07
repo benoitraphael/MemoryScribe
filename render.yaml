@@ -13,5 +13,3 @@ services:
         value: true
       - key: FLASK_ENV
         value: production
-      - key: ENCRYPTION_KEY
-        generateValue: true
