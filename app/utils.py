@@ -104,11 +104,10 @@ Ici sont stockées les informations essentielles à retenir comme : mon nom et m
 
 </contexte_general>
 
-<notes>
+## Notes 
 Ici sont stockées l'historique des notes importantes copiées-collées depuis nos conversations pour en conserver la mémoire pour nos futurs échanges.
 C'est ici que je vais coller les notes de nos échanges.
-
-</notes>""",
+""",
     
     'essai.md': """# Points clés 
 
