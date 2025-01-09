@@ -16,14 +16,27 @@ lib64/
 parts/
 sdist/
 var/
-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
 
 # Virtual Environment
 venv/
 ENV/
+.venv
 
 # IDE
 .idea/
@@ -33,14 +46,12 @@ ENV/
 
 # Database
 *.db
-*.sqlite3
 
 # Logs
 *.log
 
 # Local configuration
 instance/
-.env
 
 # OS generated files
 .DS_Store
@@ -53,3 +64,6 @@ Thumbs.db
 
 # Windsurfing files
 .windsurfrules
+
+# Exclude .env and other sensitive files
+.env
