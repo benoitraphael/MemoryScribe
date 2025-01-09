@@ -33,14 +33,18 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 100px);
 }
 
 .chat-messages {
+    flex: 1;
+    overflow-y: auto;
     border: 1px solid #E2E2E4;
     padding: 20px;
     margin-bottom: 20px;
     background: #F8F8FA;
-    min-height: 300px;
 }
 
 .chat-header h2 {
@@ -278,7 +282,7 @@ ${data.context.essai}
 </essai>`;
 
             // 3. Afficher le premier message
-            appendMessage(premierMessage, 'user');
+            const messageDiv = appendMessage(premierMessage, 'user');
 
             // Afficher l'animation de chargement
             const loadingElement = showLoadingMessage();
@@ -425,6 +429,11 @@ ${data.context.essai}
         if (save) {
             saveMessages();
         }
+        
+        // Scroll le nouveau message en vue
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        
+        return messageDiv;
     }
 
     // Fonction pour afficher l'animation de chargement
@@ -444,6 +453,9 @@ ${data.context.essai}
         
         messageDiv.appendChild(typingDiv);
         chatMessages.appendChild(messageDiv);
+        
+        // Scroll to bottom after showing typing indicator
+        chatMessages.scrollTop = chatMessages.scrollHeight;
         
         return messageDiv;
     }
@@ -502,7 +514,12 @@ ${data.context.essai}
             
             if (data.success) {
                 // Afficher la réponse de l'assistant
-                appendMessage(data.response, 'assistant');
+                const assistantMessage = appendMessage(data.response, 'assistant');
+                
+                // Force scroll to bottom after model response
+                setTimeout(() => {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 100);
             } else {
                 console.error('Erreur API:', data.error);
                 appendMessage('Erreur: ' + data.error, 'assistant error');
