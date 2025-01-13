@@ -23,6 +23,12 @@ MemoryScribe est un assistant conversationnel intelligent et introspectif avec m
     3. Prompt système (personnalisation de l'assistant)
   - Éditeur Markdown avec sauvegarde automatique
 
+- 📚 **Blog de notes**
+  - Affichage des notes de conversation dans un format blog
+  - Nettoyage automatique du formatage HTML pour une meilleure lisibilité
+  - Affichage chronologique des notes
+  - Indication du nombre total de notes
+
 ## Installation
 
 1. Clonez le dépôt :
@@ -49,11 +55,10 @@ python run.py
 
 ## Technologies utilisées
 
-- Backend : Flask, SQLAlchemy
-- Frontend : HTML, CSS, JavaScript
-- API : Google Gemini 1.5 Pro
-- Base de données : SQLite
-
-## Licence
-
-MIT
+- 🐍 Python avec Flask
+- 🎨 Bootstrap pour l'interface
+- 🧠 API Gemini de Google
+- 🗄️ PostgreSQL pour la base de données
+- 🔒 Flask-Login pour l'authentification
+- ✨ Jinja2 pour les templates
+- 📝 Support Markdown pour le formatage
