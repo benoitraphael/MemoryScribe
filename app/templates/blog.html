@@ -18,8 +18,8 @@
                     <span class="text-muted">{{ note.date }}</span>
                 </div>
             </div>
-            <div class="card-body">
-                {{ note.content | clean_html }}
+            <div class="card-body markdown-content">
+                {{ note.content | markdown_to_html | safe }}
             </div>
         </div>
         {% endfor %}
@@ -54,4 +54,18 @@
         </div>
     {% endif %}
 </div>
+
+<style>
+.markdown-content {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+}
+.markdown-content h1 { font-size: 1.75rem; margin-top: 1rem; margin-bottom: 1rem; }
+.markdown-content h2 { font-size: 1.5rem; margin-top: 0.9rem; margin-bottom: 0.9rem; }
+.markdown-content h3 { font-size: 1.25rem; margin-top: 0.8rem; margin-bottom: 0.8rem; }
+.markdown-content p { margin-bottom: 1rem; }
+.markdown-content ul, .markdown-content ol { margin-bottom: 1rem; padding-left: 2rem; }
+.markdown-content code { background-color: #f8f9fa; padding: 0.2em 0.4em; border-radius: 3px; }
+.markdown-content pre { background-color: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+</style>
 {% endblock %}

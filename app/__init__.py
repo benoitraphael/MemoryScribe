@@ -64,8 +64,20 @@ def create_app():
         text = re.sub(r'<[^>]+>', '', text)
         return text
     
+    @app.template_filter('clean_html')
+    def clean_html(text):
+        return re.sub(r'<[^>]+>', '', text) if text else ''
+
+    @app.template_filter('markdown_to_html')
+    def markdown_to_html(text):
+        if not text:
+            return ''
+        import markdown
+        # Extension pour les sauts de ligne et les liens
+        md = markdown.Markdown(extensions=['nl2br', 'fenced_code'])
+        return md.convert(text)
+
     app.jinja_env.filters['markdown'] = markdown_filter
-    app.jinja_env.filters['clean_html'] = clean_html_filter
     
     # Import et enregistrement des blueprints
     from .auth import auth
