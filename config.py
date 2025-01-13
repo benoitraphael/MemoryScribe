@@ -7,7 +7,8 @@ load_dotenv()
 
 class Config:
     # Configuration Flask
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-à-changer'
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
+    DEBUG = True  # Activer le mode debug
     
     # Configuration CSRF
     WTF_CSRF_CHECK_DEFAULT = False  # Désactive la vérification CSRF par défaut

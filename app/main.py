@@ -2,8 +2,11 @@ from flask import Blueprint, render_template, request, jsonify, flash, redirect,
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from wtforms import HiddenField
-from .utils import get_user_files, save_user_file
+from .utils import get_user_files, save_user_file, get_user_directory
 from . import db, csrf
+from .note_cache import NoteCache
+import os
+from pathlib import Path
 
 try:
     import google.generativeai as genai
@@ -11,6 +14,9 @@ try:
 except ImportError:
     print("Erreur: Impossible d'importer google.generativeai")
     GEMINI_AVAILABLE = False
+
+# Initialisation du cache
+note_cache = NoteCache(os.path.join(os.path.dirname(__file__), 'cache'))
 
 main = Blueprint('main', __name__)
 
@@ -191,3 +197,52 @@ def save_api_key():
         flash(f'Erreur lors de la sauvegarde de la clé API : {str(e)}')
     
     return redirect(url_for('main.profile'))
+
+@main.route('/blog')
+@main.route('/blog/page/<int:page>')
+@login_required
+def blog(page=1):
+    print(f"DEBUG: Email de l'utilisateur: {current_user.email}")
+    
+    # Récupérer le chemin du fichier mémoire en utilisant get_user_directory
+    user_dir = get_user_directory(current_user.email)
+    memoire_path = os.path.join(user_dir, 'memoire.md')
+    memoire_path = os.path.normpath(memoire_path)
+    
+    print(f"DEBUG: Chemin complet du fichier mémoire: {memoire_path}")
+    print(f"DEBUG: Le fichier existe: {os.path.exists(memoire_path)}")
+    
+    if os.path.exists(memoire_path):
+        with open(memoire_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            print(f"DEBUG: Contenu du fichier (premiers 200 caractères):\n{content[:200]}")
+            print(f"DEBUG: Longueur totale du contenu: {len(content)} caractères")
+    else:
+        print(f"DEBUG: Le fichier n'existe pas!")
+        # Lister le contenu du répertoire parent
+        if os.path.exists(user_dir):
+            print(f"DEBUG: Contenu du répertoire {user_dir}:")
+            print(os.listdir(user_dir))
+        else:
+            print(f"DEBUG: Le répertoire utilisateur n'existe pas!")
+    
+    # Charger ou mettre à jour le cache si nécessaire
+    cache_loaded = note_cache.load_cache(current_user.email)
+    print(f"DEBUG: Cache chargé: {cache_loaded}")
+    
+    if not cache_loaded or note_cache.needs_update(Path(memoire_path)):
+        print("DEBUG: Mise à jour du cache nécessaire")
+        note_cache.update_from_file(Path(memoire_path))
+        note_cache.save_cache(current_user.email)
+    
+    # Récupérer la page demandée
+    notes, total_pages = note_cache.get_page(page)
+    print(f"DEBUG: Nombre de notes trouvées: {len(notes) if notes else 0}")
+    stats = note_cache.get_stats()
+    print(f"DEBUG: Statistiques: {stats}")
+    
+    return render_template('blog.html', 
+                         notes=notes,
+                         page=page,
+                         total_pages=total_pages,
+                         stats=stats)
