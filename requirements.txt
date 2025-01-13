@@ -8,3 +8,4 @@ python-dotenv==1.0.0
 psycopg2-binary==2.9.9  # Pour PostgreSQL
 gunicorn==21.2.0        # Pour Render
 Flask-Migrate==4.0.5
+markdown==3.5.1         # Pour le formatage des notes
