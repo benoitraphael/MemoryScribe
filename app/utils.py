@@ -124,7 +124,7 @@ def get_user_directory(user_email):
     print(f"Using base path: {base_path}")  # Debug log
     user_dir = os.path.join(base_path, user_email)
     print(f"User directory: {user_dir}")  # Debug log
-    return user_dir
+    return Path(user_dir)
 
 def init_user_files(user_email):
     """Crée les fichiers nécessaires pour un nouvel utilisateur."""
