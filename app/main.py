@@ -77,7 +77,7 @@ def send_message():
         genai.configure(api_key=api_key)
         
         print("Création du modèle Gemini")
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        model = genai.GenerativeModel('gemini-1.5-pro')
         
         # Construire la conversation complète
         conversation = []
