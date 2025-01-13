@@ -7,6 +7,8 @@ from os import path
 from config import Config
 import os
 from dotenv import load_dotenv
+import markdown
+import re
 
 # Chargement des variables d'environnement
 load_dotenv()
@@ -48,6 +50,22 @@ def create_app():
     login_manager.init_app(app)
     csrf.init_app(app)
     login_manager.login_view = 'auth.login'
+    
+    # Ajout des filtres personnalisés
+    def markdown_filter(text):
+        return markdown.markdown(text) if text else ''
+    
+    def clean_html_filter(text):
+        if not text:
+            return ''
+        # Supprimer les balises <p> et </p>
+        text = re.sub(r'</?p>', '', text)
+        # Supprimer toutes les autres balises HTML
+        text = re.sub(r'<[^>]+>', '', text)
+        return text
+    
+    app.jinja_env.filters['markdown'] = markdown_filter
+    app.jinja_env.filters['clean_html'] = clean_html_filter
     
     # Import et enregistrement des blueprints
     from .auth import auth
