@@ -46,11 +46,9 @@
             </a>
             <div class="navbar-nav">
                 {% if current_user.is_authenticated %}
-                    {% if request.endpoint == 'main.chat' %}
-                        <a class="nav-link" href="{{ url_for('main.profile') }}">Profil</a>
-                    {% else %}
-                        <a class="nav-link" href="{{ url_for('main.chat') }}">Chat</a>
-                    {% endif %}
+                    <a class="nav-link" href="{{ url_for('main.chat') }}">Chat</a>
+                    <a class="nav-link" href="{{ url_for('main.blog') }}">Notes</a>
+                    <a class="nav-link" href="{{ url_for('main.profile') }}">Profil</a>
                     <a class="nav-link" href="{{ url_for('auth.logout') }}">Déconnexion</a>
                 {% else %}
                     <a class="nav-link" href="{{ url_for('auth.login') }}">Connexion</a>
